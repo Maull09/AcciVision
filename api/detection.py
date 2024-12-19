@@ -1,31 +1,32 @@
-import numpy as np
-from PIL import Image
 from ultralytics import YOLO
+import requests
 
-# Load YOLO model globally
-model = YOLO("https://res.cloudinary.com/dhz4ho3we/raw/upload/v1734624660/accivision/w3qkj1tvakh12ovpvbhv.pt")  # Replace with your YOLOv8 model
+def get_model():
+    model_url = "https://res.cloudinary.com/dhz4ho3we/raw/upload/v1734624660/accivision/w3qkj1tvakh12ovpvbhv.pt"
+    response = requests.get(model_url)
+    with open("best.pt", "wb") as f:
+        f.write(response.content)
+    return YOLO("best.pt")
 
 def detect_objects(image_bytes):
-    try:
-        # Convert image bytes to a Pillow Image
-        image = Image.open(image_bytes)
-        
-        # Convert Pillow image to NumPy array (RGB format)
-        image_np = np.array(image)
+    # Convert bytes to image
+    from PIL import Image
+    from io import BytesIO
+    image = Image.open(BytesIO(image_bytes))
 
-        # Perform inference using YOLO model
-        results = model(image_np)
+    # Load the model dynamically
+    model = get_model()
 
-        # Parse results
-        detections = []
-        for result in results:
-            for box in result.boxes:
-                detections.append({
-                    "class": model.names[int(box.cls)],
-                    "confidence": float(box.conf),
-                    "bbox": box.xyxy.tolist(),
-                })
-        return detections
-    except Exception as e:
-        print(f"Error during object detection: {e}")
-        return []
+    # Perform inference
+    results = model(image)
+
+    # Parse results
+    detections = []
+    for result in results:
+        for box in result.boxes:
+            detections.append({
+                "class": model.names[int(box.cls)],
+                "confidence": float(box.conf),
+                "bbox": box.xyxy.tolist(),
+            })
+    return detections
