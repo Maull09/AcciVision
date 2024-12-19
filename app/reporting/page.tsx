@@ -65,7 +65,7 @@ export default function ReportingPage() {
       }
 
       // Call backend detection and mailing
-      const response = await fetch(`http://localhost:8000/process_detection`, {
+      const response = await fetch(`/process_detection`, {
         method: "POST",
         body: formData,
       });

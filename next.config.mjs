@@ -30,8 +30,17 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "**",
+        pathname: "/**",
       },
     ],
+  },
+  rewrites: async () => {
+    return [
+      {
+        source: "/api/:path*",
+        destination: "http://127.0.0.1:8000/:path*",
+      },
+    ];
   },
 };
 
