@@ -3,7 +3,7 @@ from PIL import Image
 from ultralytics import YOLO
 
 # Load YOLO model globally
-model = YOLO("best.pt")  # Replace with your YOLOv8 model
+model = YOLO("https://res.cloudinary.com/dhz4ho3we/raw/upload/v1734624660/accivision/w3qkj1tvakh12ovpvbhv.pt")  # Replace with your YOLOv8 model
 
 def detect_objects(image_bytes):
     try:
