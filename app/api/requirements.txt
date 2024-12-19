@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+cloudinary
+requests
+numpy
+opencv-python
+ultralytics
+smtplib
+email
+pydantic

@@ -8,7 +8,7 @@ import { fetchProvinces, fetchRegenciesByProvince,
   fetchDistrictsByRegency
  } from "@/lib/utils";
 import { insertReport, insertNotification, updateOrInsertHeatmap } from "@/lib/api";
-import { randomUUID } from "crypto";
+import { v4 as uuidv4 } from "uuid";
 
 export default function ReportingPage() {
   const { userId } = useAuth();
@@ -58,8 +58,6 @@ export default function ReportingPage() {
       )?.name;
 
       const description = formData.get("description") as string;
-      const imageFile = formData.get("image") as File | null;
-      const imagePath = imageFile ? `/uploads/${imageFile.name}` : null;
       const userId = formData.get("userId") as string;
 
       if (!selectedProvince || !selectedCity || !selectedDistrict || !userId) {
@@ -81,6 +79,9 @@ export default function ReportingPage() {
       const detectionStatus = detectionResult.detectionStatus || "not_detected";
       console.log("Detection status:", detectionStatus);
 
+      const imagePath = detectionResult.imageUrl;
+      console.log("Image path:", imagePath);
+      
       // Insert report
       const reportId = await insertReport({
         userId,
@@ -90,7 +91,7 @@ export default function ReportingPage() {
         description,
         status: detectionStatus,
         createdAt: new Date(),
-        image: imagePath || "",
+        image: imagePath,
       });
 
       // Insert notification
@@ -123,7 +124,7 @@ export default function ReportingPage() {
           province: selectedProvince, 
           city: selectedCity, 
           district: selectedDistrict,
-          id: randomUUID().toString(),
+          id: uuidv4().toString(),
           intensity: 1,
           latitude: getLatitude(selectedDistrict),
           longitude: getLongitude(selectedDistrict),

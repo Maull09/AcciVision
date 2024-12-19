@@ -8,7 +8,7 @@ interface AccidentModalProps {
 
 const AccidentModal: React.FC<AccidentModalProps> = ({ accident, onClose }) => {
   const imageUrl = accident.image
-    ? `http://localhost:8000${accident.image}`
+    ? `${accident.image}`
     : "/road_accident_illustration.jpg"; // Default placeholder
 
   return (

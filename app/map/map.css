@@ -1,0 +1,8 @@
+.map-container {
+    width: 90%; /* Adjust width as needed */
+    height: 500px; /* Adjust height as needed */
+    margin: 0 auto; /* Center the map */
+    border: 1px solid #ccc;
+    border-radius: 8px;
+  }
+  

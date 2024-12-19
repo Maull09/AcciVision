@@ -11,32 +11,9 @@ const AccidentItem: React.FC<AccidentItemProps> = ({ accident, onClick }) => {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchImage = async () => {
-      if (accident.image) {
-        try {
-          // Ambil gambar dari backend
-          const response = await fetch(`http://localhost:8000${accident.image}`);
-          if (response.ok) {
-            const blob = await response.blob();
-            setImageSrc(URL.createObjectURL(blob));
-          } else {
-            console.error("Failed to fetch image:", response.statusText);
-            setImageSrc("/road_accident_illustration.jpg"); // Gambar fallback
-          }
-        } catch (error) {
-          console.error("Error fetching image:", error);
-          setImageSrc("/road_accident_illustration.jpg"); // Gambar fallback
-        }
-      } else {
-        setImageSrc("/road_accident_illustration.jpg"); // Gambar fallback
-      }
-    };
-
-    fetchImage().catch((error) => {
-      console.error(error);
-    }).then(() => {
-      console.log("");
-    });
+    if (accident.image) {
+      setImageSrc(`${accident.image}`);
+    }
   }, [accident.image]);
 
   const formattedDate = new Date(accident.createdAt).toLocaleString();

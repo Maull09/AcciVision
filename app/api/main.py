@@ -1,22 +1,23 @@
-from fastapi import FastAPI, Form, UploadFile, File
-from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI, Form, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from detection import detect_objects
 from mailing import send_email
 from pydantic import BaseModel
-from fastapi.responses import FileResponse
+from dotenv import load_dotenv
+import cloudinary.uploader
 import os
 from uuid import uuid4
-from dotenv import load_dotenv
 
 load_dotenv()
 
-UPLOAD_DIR = "public/uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+# Initialize Cloudinary
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+)
 
 app = FastAPI()
-
-app.mount("/uploads", StaticFiles(directory="public/uploads"), name="uploads")
 
 app.add_middleware(
     CORSMiddleware,
@@ -29,13 +30,7 @@ app.add_middleware(
 class DetectionResponse(BaseModel):
     detectionStatus: str
     emailStatus: dict
-
-@app.get("/images/{filename}")
-async def get_image(filename: str):
-    file_path = os.path.join(UPLOAD_DIR, filename)
-    if os.path.exists(file_path):
-        return FileResponse(file_path)
-    return {"error": "File not found"}, 404
+    imageUrl: str
 
 @app.post("/process_detection", response_model=DetectionResponse)
 async def process_detection(
@@ -46,37 +41,61 @@ async def process_detection(
     image: UploadFile = File(...),
     userId: str = Form(...),
 ):
-    # Save the uploaded image with a unique filename
-    unique_filename = f"{image.filename}"
-    image_path = os.path.join(UPLOAD_DIR, unique_filename)
-    with open(image_path, "wb") as buffer:
-        buffer.write(await image.read())
+    try:
+        # Log the start of the process
+        print(f"Processing detection for userId: {userId}")
 
-    # Perform detection
-    detections = detect_objects(image_path)
-    detection_status = "detected" if len(detections) > 0 and detections[0]["class"] == "car-crash" else "not_detected"
+        # Upload image to Cloudinary
+        print("Uploading image to Cloudinary...")
+        upload_result = cloudinary.uploader.upload(
+            file=image.file,
+            folder="accivision/uploads",
+            public_id=f"{userId}_{uuid4()}",
+            resource_type="image",
+        )
+        image_url = upload_result["secure_url"]
+        print(f"Image uploaded successfully: {image_url}")
 
-    # Send email 
-    if detection_status == "detected":
-        email_status = send_email({
-        "recipient_email": os.getenv("EMAIL_RECEIVER"),
-        "province": province,
-        "city": city,
-        "district": district,
-        "description": description,
-        "image_path": image_path,
-        }) 
-    else:
-        email_status = {"success": False, "message": "No email sent because no car crash detected."}
-    
-    print(email_status)
-        
-    return DetectionResponse(
-        detectionStatus=detection_status,
-        emailStatus=email_status,
-        # imagePath=f"/images/{unique_filename}"
-    )
+        # Read the file as bytes for YOLO detection
+        print("Reading image file for detection...")
+        image.file.seek(0)  # Reset file pointer
+        image_bytes = await image.read()
+
+        # Perform detection
+        print("Performing object detection...")
+        detections = detect_objects(image_bytes)  # Pass bytes to detection logic
+        print(f"Detections: {detections}")
+
+        detection_status = "detected" if detections and detections[0]["class"] == "car-crash" else "not_detected"
+        print(f"Detection status: {detection_status}")
+
+        # Send email
+        if detection_status == "detected":
+            print("Sending email notification...")
+            email_status = send_email({
+                "recipient_email": os.getenv("EMAIL_RECEIVER"),
+                "province": province,
+                "city": city,
+                "district": district,
+                "description": description,
+                "image_url": image_url,
+            })
+            print(f"Email sent successfully: {email_status}")
+        else:
+            email_status = {"success": False, "message": "No email sent because no car crash detected."}
+            print("No car crash detected; skipping email.")
+
+        return DetectionResponse(
+            detectionStatus=detection_status,
+            emailStatus=email_status,
+            imageUrl=image_url,
+        )
+    except Exception as e:
+        # Log the exception details
+        print(f"Error during process_detection: {str(e)}")
+        raise HTTPException(status_code=500, detail={"error": str(e)})
+
 
 if __name__ == '__main__':
-  import uvicorn
-  uvicorn.run("main:app", host='localhost', port=8000, reload=True)
+    import uvicorn
+    uvicorn.run("main:app", host='localhost', port=8000, reload=True)

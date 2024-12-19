@@ -14,34 +14,9 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   const [imageSrc, setImageSrc] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchImage = async () => {
-      if (report?.image) {
-        try {
-          // Fetch the image from the backend
-          const response = await fetch(
-            `http://localhost:8000${report.image}`
-          );
-          if (response.ok) {
-            const blob = await response.blob();
-            setImageSrc(URL.createObjectURL(blob));
-          } else {
-            console.error("Failed to fetch image:", response.statusText);
-            setImageSrc("/road_accident_illustration.jpg"); // Fallback image
-          }
-        } catch (error) {
-          console.error("Error fetching image:", error);
-          setImageSrc("/road_accident_illustration.jpg"); // Fallback image
-        }
-      } else {
-        setImageSrc("/road_accident_illustration.jpg"); // Fallback image
-      }
-    };
-
-    fetchImage().catch((error) => {
-      console.error(error);
-    }).then(() => {
-      console.log("");
-    });
+    if (report?.image) {
+      setImageSrc(`${report.image}`);
+    }
   }, [report?.image]);
 
   const formattedDate = new Date(notification.createdAt).toLocaleString();

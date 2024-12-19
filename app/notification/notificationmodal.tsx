@@ -14,7 +14,7 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
 
   // Define the image URL dynamically based on the backend path
   const imageUrl = report?.image
-    ? `http://localhost:8000${report.image}`
+    ? `${report.image}`
     : "/road_accident_illustration.jpg"; // Default placeholder image
 
   return (

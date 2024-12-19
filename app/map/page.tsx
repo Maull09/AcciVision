@@ -1,5 +1,3 @@
-// app/map/page.tsx
-
 "use client";
 
 import dynamic from "next/dynamic";
@@ -40,10 +38,10 @@ export default function HeatmapPage() {
   }, [selectedFilters]);
 
   return (
-    <main>
-      <div className="flex flex-col items-center w-full h-screen bg-white">
-        <h1 className="text-2xl font-bold text-blue-600 mb-5 mt-4">Heatmap - Road Accident Locations</h1>
-        <FilterControls selectedFilters={selectedFilters} onFilterChange={setSelectedFilters} />
+    <main className="flex flex-col items-center w-full h-screen bg-white">
+      <h1 className="text-2xl font-bold text-blue-600 mb-5 mt-4">Heatmap - Road Accident Locations</h1>
+      <FilterControls selectedFilters={selectedFilters} onFilterChange={setSelectedFilters} />
+      <div className="w-full h-[calc(100%-8rem)]">
         <HeatmapClient heatmapData={heatmapData} />
       </div>
     </main>
