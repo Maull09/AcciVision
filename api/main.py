@@ -32,6 +32,32 @@ class DetectionResponse(BaseModel):
     emailStatus: dict
     imageUrl: str
 
+from ultralytics import YOLO
+import requests
+
+def detect_objects(image_bytes):
+    # Convert bytes to image
+    from PIL import Image
+    from io import BytesIO
+    image = Image.open(BytesIO(image_bytes))
+
+    # Load the model dynamically
+    model = YOLO("https://res.cloudinary.com/dhz4ho3we/raw/upload/v1734624660/accivision/w3qkj1tvakh12ovpvbhv.pt")  # Replace with your YOLOv8 model
+
+    # Perform inference
+    results = model(image)
+
+    # Parse results
+    detections = []
+    for result in results:
+        for box in result.boxes:
+            detections.append({
+                "class": model.names[int(box.cls)],
+                "confidence": float(box.conf),
+                "bbox": box.xyxy.tolist(),
+            })
+    return detections
+
 @app.post("/process_detection", response_model=DetectionResponse)
 async def process_detection(
     province: str = Form(...),
