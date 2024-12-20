@@ -65,14 +65,26 @@ export default function ReportingPage() {
       }
 
       // Call backend detection and mailing
-      const response = await fetch(`http://localhost:8000/process_detection`, {
-        method: "POST",
-        body: formData,
-      });
-      const detectionResult = await response.json();
-
-      if (!response.ok) {
-        throw new Error("Detection and mailing failed");
+      let detectionResult;
+      try {
+        const response = await fetch('https://accivision-backend-production.up.railway.app/process_detection', {
+          method: "POST",
+          body: formData,
+        });
+      
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+      
+        detectionResult = await response.json();
+        console.log("Detection result:", detectionResult);
+      } catch (error) {
+        if (error instanceof Error) {
+          console.error("Error during backend call:", error.message);
+        } else {
+          console.error("Error during backend call:", error);
+        }
+        throw error;
       }
 
       // Determine status based on detection
